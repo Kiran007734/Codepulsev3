@@ -4,25 +4,21 @@ Routes:
   GET  /api/dashboard/manager  - full manager dashboard
   GET  /api/report/download    - download PDF report
   GET  /api/test-email         - verify SMTP credentials (dev only)
-  POST /api/send-report        - generate PDF and email it to a recipient
+
+Note: Email sending to individual developers is handled by
+      routers/dev_report.py (POST /api/send-dev-report).
 """
 
 import logging
-from fastapi import APIRouter, Response, HTTPException
-from fastapi.responses import StreamingResponse
-import io
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, Response
 from services.dashboard_predictive import build_manager_dashboard
 from services.report_service import generate_pdf_report
-from services.email_service import send_report_email, validate_email, verify_smtp
+from services.email_service import verify_smtp
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Manager Dashboard"])
 
-
-class SendReportRequest(BaseModel):
-    email: str
 
 
 @router.get("/api/test-email", tags=["Debug"])
@@ -85,38 +81,4 @@ async def download_manager_report():
         return {"error": True, "message": str(e)}
 
 
-@router.post("/api/send-report")
-async def send_manager_report_email(body: SendReportRequest):
-    """
-    Generate a PDF report of the current manager dashboard and send it
-    as an email attachment to the provided address.
 
-    Request body: { "email": "recipient@example.com" }
-    """
-    # ── Server-side email validation ─────────────────────────────────────────
-    if not validate_email(body.email):
-        raise HTTPException(status_code=422, detail="Invalid email address.")
-
-    try:
-        # 1. Build dashboard data
-        data = await build_manager_dashboard()
-
-        # 2. Generate PDF in memory
-        pdf_bytes = generate_pdf_report(data)
-
-        # 3. Send via Gmail SMTP
-        send_report_email(recipient=body.email.strip(), pdf_bytes=bytes(pdf_bytes))
-
-        return {"success": True, "message": f"Report sent to {body.email}"}
-
-    except ValueError as e:
-        # Missing credentials or bad address
-        logger.warning("send-report validation error: %s", e)
-        raise HTTPException(status_code=422, detail=str(e))
-    except RuntimeError as e:
-        # SMTP delivery failure
-        logger.error("send-report SMTP error: %s", e)
-        raise HTTPException(status_code=502, detail=str(e))
-    except Exception as e:
-        logger.exception("send-report unexpected error")
-        raise HTTPException(status_code=500, detail="Internal server error while sending report.")

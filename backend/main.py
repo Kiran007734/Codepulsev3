@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from models.db import init_db
 from routers import github, analysis, dashboard, chat, ai, jira, notifications
 from routers import predictive_risk, interventions, manager_dashboard, simulation, wow
-from routers import mock_predictive
+from routers import mock_predictive, dev_report
 
 # ── Load .env from backend/ directory regardless of launch CWD ───────────────
 _ENV_PATH = Path(__file__).parent / ".env"
@@ -69,6 +69,9 @@ app.include_router(wow.router)
 
 # ── Mock-Fallback Predictive layer (uses real GitHub data when Jira is absent) ──
 app.include_router(mock_predictive.router)
+
+# ── Developer Reports ──
+app.include_router(dev_report.router)
 
 
 @app.on_event("startup")

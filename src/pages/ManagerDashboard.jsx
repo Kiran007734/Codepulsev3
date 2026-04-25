@@ -24,12 +24,6 @@ export default function ManagerDashboard() {
   const [triggerStatus, setTriggerStatus] = useState(null);
   const [downloading, setDownloading] = useState(false);
 
-  // ── Email Report state ────────────────────────────────────────────────────
-  const [emailInput, setEmailInput] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [sendStatus, setSendStatus] = useState(null); // null | 'sending' | 'success' | 'error'
-  const [sendMsg, setSendMsg] = useState('');
-
   useEffect(() => {
     fetch(`${API_BASE}/dashboard/manager`)
       .then(r => r.json())
@@ -47,39 +41,7 @@ export default function ManagerDashboard() {
     setTimeout(() => setTriggerStatus(null), 3000);
   };
 
-  // ── Email validation & send ───────────────────────────────────────────────
-  const isValidEmail = (addr) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.trim());
 
-  const handleEmailChange = (e) => {
-    setEmailInput(e.target.value);
-    setEmailError(e.target.value && !isValidEmail(e.target.value) ? 'Enter a valid email address' : '');
-  };
-
-  const handleSendReport = async () => {
-    if (!isValidEmail(emailInput)) {
-      setEmailError('Enter a valid email address');
-      return;
-    }
-    setSendStatus('sending');
-    setSendMsg('');
-    try {
-      const res = await fetch(`${API_BASE}/send-report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput.trim() }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.detail || 'Failed to send report');
-      setSendStatus('success');
-      setSendMsg(`Report sent to ${emailInput.trim()}`);
-      setEmailInput('');
-    } catch (err) {
-      setSendStatus('error');
-      setSendMsg(err.message || 'Failed to send report. Please try again.');
-    } finally {
-      setTimeout(() => { setSendStatus(null); setSendMsg(''); }, 5000);
-    }
-  };
 
   const handleDownloadReport = async () => {
     setDownloading(true);
@@ -165,69 +127,6 @@ export default function ManagerDashboard() {
         </div>
       </div>
 
-      {/* ── Email Report Row ─────────────────────────────────────────────── */}
-      <div className="animate-fade-in">
-        <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 p-3 rounded-xl border ${isDark ? 'bg-white/3 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
-          <span className="text-sm flex-shrink-0 t-muted">📧 Email Report:</span>
-          <div className="flex flex-1 gap-2 w-full sm:w-auto">
-            <div className="flex-1 relative">
-              <input
-                id="email-report-input"
-                type="email"
-                value={emailInput}
-                onChange={handleEmailChange}
-                placeholder="recipient@example.com"
-                disabled={sendStatus === 'sending'}
-                className={`w-full text-xs px-3 py-2 rounded-lg border outline-none transition-all duration-200
-                  ${isDark
-                    ? 'bg-white/5 text-slate-200 placeholder-slate-500 border-white/10 focus:border-blue-500/50 focus:bg-white/10'
-                    : 'bg-white text-gray-800 placeholder-gray-400 border-gray-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-100'
-                  }
-                  ${emailError ? (isDark ? 'border-red-500/50' : 'border-red-400') : ''}
-                  ${sendStatus === 'sending' ? 'opacity-60 cursor-not-allowed' : ''}
-                `}
-              />
-              {emailError && (
-                <p className="absolute -bottom-4 left-0 text-[10px] text-red-400">{emailError}</p>
-              )}
-            </div>
-            <button
-              id="send-report-btn"
-              onClick={handleSendReport}
-              disabled={!emailInput || !!emailError || sendStatus === 'sending'}
-              className={`text-xs font-medium px-4 py-2 rounded-lg transition-all duration-200 flex-shrink-0 flex items-center gap-1.5
-                ${sendStatus === 'sending'
-                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-not-allowed'
-                  : !emailInput || !!emailError
-                  ? isDark
-                    ? 'bg-white/5 text-slate-500 border border-white/10 cursor-not-allowed'
-                    : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
-                  : isDark
-                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25'
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                }`}
-            >
-              {sendStatus === 'sending' ? (
-                <><span className="animate-spin inline-block">⏳</span> Sending…</>
-              ) : (
-                <>✉️ Send Report</>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Toast */}
-        {sendStatus && sendStatus !== 'sending' && (
-          <div className={`mt-2 px-4 py-2.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all duration-300 animate-fade-in
-            ${sendStatus === 'success'
-              ? isDark ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/25' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : isDark ? 'bg-red-500/15 text-red-300 border border-red-500/25' : 'bg-red-50 text-red-700 border border-red-200'
-            }`}
-          >
-            {sendStatus === 'success' ? '✅' : '❌'} {sendMsg}
-          </div>
-        )}
-      </div>
 
       {/* Sprint Overview Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 opacity-0 animate-slide-up stagger-1">

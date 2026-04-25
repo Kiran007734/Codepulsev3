@@ -1,8 +1,14 @@
-"""Email Service - generates a PDF report and delivers it via Gmail SMTP.
+"""Email Service — delivers PDF reports via Gmail SMTP.
 
 Env vars required (in backend/.env):
     EMAIL_SENDER        e.g.  kiranrajxarcher.2008@gmail.com
     EMAIL_APP_PASSWORD  16-char Gmail App Password  (NOT your login password)
+
+Two delivery functions:
+    send_report_email()           → project / manager reports
+    send_developer_report_email() → individual developer intelligence reports
+
+Email addresses are NEVER stored — used only within the lifetime of a single request.
 """
 
 import os
@@ -93,15 +99,24 @@ def send_report_email(recipient: str, pdf_bytes: bytes) -> None:
     attachment.add_header("Content-Disposition", "attachment", filename=filename)
     msg.attach(attachment)
 
-    # ── SMTP delivery ─────────────────────────────────────────────────────────
+    # ── SMTP delivery (shared path below) ────────────────────────────────────
+    _smtp_deliver(sender, password, recipient, msg)
+
+
+
+def _smtp_deliver(sender: str, password: str, recipient: str, msg: MIMEMultipart) -> None:
+    """
+    Internal helper: connect to Gmail SMTP and deliver *msg*.
+    Raises RuntimeError on any delivery failure.
+    """
     try:
-        logger.info("[SMTP] Connecting to smtp.gmail.com:587 ...")
+        logger.info("[SMTP] Connecting to smtp.gmail.com:587 for %s ...", recipient)
         with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as smtp:
             smtp.ehlo()
             smtp.starttls()
             smtp.login(sender, password)
             smtp.sendmail(sender, recipient, msg.as_string())
-        logger.info("[SMTP] \u2705 Report delivered to %s", recipient)
+        logger.info("[SMTP] \u2705 Delivered to %s", recipient)
 
     except smtplib.SMTPAuthenticationError as exc:
         logger.error("[SMTP] \u274c Auth failed for %s: %s", sender, exc)
@@ -128,6 +143,55 @@ def send_report_email(recipient: str, pdf_bytes: bytes) -> None:
         raise RuntimeError(
             "Could not reach smtp.gmail.com. Check your internet connection."
         ) from exc
+
+
+def send_developer_report_email(recipient: str, pdf_bytes: bytes, username: str = "") -> None:
+    """
+    Send a *developer-specific* PDF report to *recipient* via Gmail SMTP.
+
+    The email subject and body are personalised for individual developer reports.
+    *recipient* must be the email fetched live from the GitHub API — never stored.
+
+    Raises:
+        ValueError   – missing/invalid credentials or bad recipient address
+        RuntimeError – SMTP delivery failure
+    """
+    sender, password = _get_credentials()
+
+    if not validate_email(recipient):
+        raise ValueError(f"Invalid recipient email address: '{recipient}'")
+
+    handle = f"@{username}" if username else "Developer"
+
+    msg = MIMEMultipart()
+    msg["From"]    = f"CodePulse Reports <{sender}>"
+    msg["To"]      = recipient
+    msg["Subject"] = f"CodePulse Developer Intelligence Report — {handle}"
+
+    body = (
+        f"Hi {handle},\n\n"
+        "Please find attached your personalised CodePulse Developer Intelligence Report.\n\n"
+        "This report includes:\n"
+        "  \u2022 Your GitHub profile summary\n"
+        "  \u2022 Impact Score (0\u2013100)\n"
+        "  \u2022 Public repository statistics (stars, forks, commits)\n"
+        "  \u2022 Language breakdown across your repositories\n"
+        "  \u2022 Top repositories by star count\n"
+        "  \u2022 Recent activity timeline\n"
+        "  \u2022 Activity summary\n\n"
+        "Your email was fetched directly from your public GitHub profile and is\n"
+        "NOT stored anywhere — it was used only to deliver this report.\n\n"
+        f"Generated on {datetime.now().strftime('%Y-%m-%d at %H:%M:%S')}.\n\n"
+        "\u2014 CodePulse AI\n"
+    )
+    msg.attach(MIMEText(body, "plain"))
+
+    filename   = f"CodePulse_Dev_{username}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
+    attachment.add_header("Content-Disposition", "attachment", filename=filename)
+    msg.attach(attachment)
+
+    _smtp_deliver(sender, password, recipient, msg)
 
 
 def verify_smtp() -> dict:
