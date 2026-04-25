@@ -16,6 +16,8 @@ const navItems = [
   { id: 'manager-hub', icon: '📊', label: 'Manager Hub' },
   { id: 'simulator', icon: '🧪', label: 'Simulator' },
   { id: 'interventions', icon: '🤖', label: 'Interventions' },
+  { id: 'divider2', icon: '', label: '' },
+  { id: 'developers', icon: '👨‍💻', label: 'Developers' },
 ];
 
 
@@ -54,8 +56,8 @@ function Sidebar({ onSetup }) {
       {/* Navigation */}
       <nav className="flex-1 px-2 py-3 space-y-1 overflow-hidden">
         {navItems.map((item) => (
-          item.id === 'divider' ? (
-            <div key="divider" className={`my-2 mx-3 border-t ${isDark ? 'border-white/5' : 'border-black/5'}`} />
+          item.id.startsWith('divider') ? (
+            <div key={item.id} className={`my-2 mx-3 border-t ${isDark ? 'border-white/5' : 'border-black/5'}`} />
           ) : (
           <NavLink
             key={item.id}

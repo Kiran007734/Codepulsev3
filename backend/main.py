@@ -87,18 +87,18 @@ def _verify_smtp_on_startup() -> None:
     sender   = os.getenv("EMAIL_SENDER", "").strip()
     password = os.getenv("EMAIL_APP_PASSWORD", "").strip()
     if not sender or not password:
-        print("[CodePulse][SMTP] ⚠️  EMAIL_SENDER / EMAIL_APP_PASSWORD not configured – email sending disabled.")
+        print("[CodePulse][SMTP] WARNING: EMAIL_SENDER / EMAIL_APP_PASSWORD not configured - email sending disabled.")
         return
     try:
         with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as s:
             s.ehlo()
             s.starttls()
             s.login(sender, password)
-        print(f"[CodePulse][SMTP] ✅ Gmail SMTP verified OK for {sender}")
+        print(f"[CodePulse][SMTP] OK: Gmail SMTP verified for {sender}")
     except smtplib.SMTPAuthenticationError:
-        print("[CodePulse][SMTP] ❌ Gmail auth FAILED – check EMAIL_APP_PASSWORD in backend/.env")
+        print("[CodePulse][SMTP] FAILED: Gmail auth failed - check EMAIL_APP_PASSWORD in backend/.env")
     except Exception as exc:
-        print(f"[CodePulse][SMTP] ⚠️  Could not verify SMTP (network?): {exc}")
+        print(f"[CodePulse][SMTP] WARNING: Could not verify SMTP (network?): {exc}")
 
 
 @app.exception_handler(Exception)

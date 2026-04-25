@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import CodePulseLogo from './CodePulseLogo';
 
 /* ── dropdown data ── */
@@ -58,10 +59,10 @@ function LandingNavbar({ onNavigate }) {
     }`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-14">
         {/* ── Logo ── */}
-        <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({top:0,behavior:'smooth'}); }} className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <CodePulseLogo size={28} />
           <span className="text-base font-bold text-[#0B0F19]">CodePulse</span>
-        </a>
+        </Link>
 
         {/* ── Center links (desktop) ── */}
         <div className="hidden lg:flex items-center gap-1" ref={ddRef}>
@@ -99,12 +100,18 @@ function LandingNavbar({ onNavigate }) {
 
         {/* ── Right actions ── */}
         <div className="hidden lg:flex items-center gap-2.5">
-          <button onClick={() => onNavigate('setup')} className="px-4 py-2 text-[13px] font-medium text-[#6B7280] hover:text-[#0B0F19] transition-colors">
-            Login
-          </button>
-          <button onClick={() => onNavigate('setup')} className="px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white bg-[#0B0F19] hover:bg-[#1a1f2e] transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
-            Get Started
-          </button>
+          <Link
+            to="/login"
+            className="px-4 py-2 text-[13px] font-medium text-[#6B7280] hover:text-[#0B0F19] border border-black/[0.08] rounded-lg hover:bg-[#F8FAFC] transition-all duration-200"
+          >
+            🛡️ Admin Login
+          </Link>
+          <Link
+            to="/developer-login"
+            className="px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white bg-[#0B0F19] hover:bg-[#1a1f2e] transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+          >
+            💻 Developer Login
+          </Link>
         </div>
 
         {/* ── Mobile hamburger ── */}
@@ -123,7 +130,22 @@ function LandingNavbar({ onNavigate }) {
           {navLinks.map((l) => (
             <a key={l.label} href={l.href} className="block px-4 py-3 rounded-lg text-sm font-medium text-[#6B7280] hover:bg-[#F8FAFC]" onClick={() => setMobileOpen(false)}>{l.label}</a>
           ))}
-          <button onClick={() => { onNavigate('setup'); setMobileOpen(false); }} className="w-full mt-2 py-3 rounded-lg text-sm font-semibold text-white bg-[#0B0F19]">Get Started</button>
+          <div className="flex gap-2 mt-2">
+            <Link
+              to="/login"
+              onClick={() => setMobileOpen(false)}
+              className="flex-1 py-3 rounded-lg text-sm font-semibold text-center text-[#0B0F19] border border-black/[0.10] hover:bg-[#F8FAFC]"
+            >
+              🛡️ Admin
+            </Link>
+            <Link
+              to="/developer-login"
+              onClick={() => setMobileOpen(false)}
+              className="flex-1 py-3 rounded-lg text-sm font-semibold text-center text-white bg-[#0B0F19]"
+            >
+              💻 Developer
+            </Link>
+          </div>
         </div>
       )}
     </nav>
