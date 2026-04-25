@@ -1,0 +1,12 @@
+C:\Users\Vasanth S.J.R\AppData\Local\Programs\Python\Python310\lib\site-packages\google\api_core\_python_version_support.py:275: FutureWarning: You are using a Python version (3.10.11) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
+  warnings.warn(message, FutureWarning)
+GEMINI_API_KEY not set — chatbot will use FAQ-only mode.
+Traceback (most recent call last):
+  File "C:\codepulse\backend\test.py", line 3, in <module>
+    import main
+  File "C:\codepulse\backend\main.py", line 10, in <module>
+    from routers import github, analysis, dashboard, chat, ai, jira, notifications
+  File "C:\codepulse\backend\routers\jira.py", line 10
+    logger = logging.getLogger(__name__))
+                                        ^
+SyntaxError: unmatched ')'

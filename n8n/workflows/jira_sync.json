@@ -1,0 +1,84 @@
+{
+  "name": "codepulse_jira_sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 */6 * * *" }]
+        }
+      },
+      "name": "Every 6 Hours Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "operation": "getAll",
+        "project": "PROJECT_KEY",
+        "returnAll": true,
+        "options": {
+          "jql": "status in ('In Progress', 'Done')"
+        }
+      },
+      "name": "Fetch Jira Issues",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const issues = items.map(item => item.json);\nconst requirements = issues.map(issue => issue.fields?.summary || issue.summary || '');\nreturn [{ json: { requirements, repo_id: 1 } }];"
+      },
+      "name": "Extract Requirements",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/analysis/requirements",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "requirements",
+              "value": "={{ $json.requirements }}"
+            },
+            {
+              "name": "repo_id",
+              "value": "={{ $json.repo_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Map Requirements to Commits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours Trigger": {
+      "main": [
+        [{ "node": "Fetch Jira Issues", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Jira Issues": {
+      "main": [
+        [{ "node": "Extract Requirements", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Requirements": {
+      "main": [
+        [{ "node": "Map Requirements to Commits", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

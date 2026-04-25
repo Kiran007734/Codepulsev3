@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    import traceback; try: import main; except: traceback.print_exc()
+                      ^^^
+SyntaxError: invalid syntax

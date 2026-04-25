@@ -1,0 +1,129 @@
+{
+  "name": "codepulse_auto_refresh",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-push",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "name": "GitHub Push Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/github/fetch",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "repo_url",
+              "value": "={{ $json.repository.html_url }}"
+            },
+            {
+              "name": "token",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Fetch Latest Commits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/analysis/requirements",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "requirements",
+              "value": "={{ [] }}"
+            },
+            {
+              "name": "repo_id",
+              "value": "={{ $json.repo_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Re-run NLP Mapping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/analysis/impact?repo_id={{ $json.repo_id }}",
+        "method": "GET",
+        "options": {}
+      },
+      "name": "Recalculate Impact Scores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/analysis/risks?repo_id={{ $json.repo_id }}",
+        "method": "GET",
+        "options": {}
+      },
+      "name": "Recalculate Risks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#codepulse-alerts",
+        "text": "🔄 CodePulse analysis updated for {{ $json.repository.full_name }}",
+        "options": {}
+      },
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1500, 300],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "GitHub Push Webhook": {
+      "main": [
+        [{ "node": "Fetch Latest Commits", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Latest Commits": {
+      "main": [
+        [{ "node": "Re-run NLP Mapping", "type": "main", "index": 0 }]
+      ]
+    },
+    "Re-run NLP Mapping": {
+      "main": [
+        [{ "node": "Recalculate Impact Scores", "type": "main", "index": 0 }]
+      ]
+    },
+    "Recalculate Impact Scores": {
+      "main": [
+        [{ "node": "Recalculate Risks", "type": "main", "index": 0 }]
+      ]
+    },
+    "Recalculate Risks": {
+      "main": [
+        [{ "node": "Slack Notification", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

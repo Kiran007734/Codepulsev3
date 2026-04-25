@@ -1,0 +1,200 @@
+python : Traceback (most 
+recent call last):
+At line:1 char:1
++ python -c "import 
+httpx; r=httpx.get('http:/
+/localhost:8000/api/risk/ 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (T  
+  raceback (most recent   
+  call last)::String)     
+[], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_transpor
+ts\default.py", line 101, 
+in map_httpcore_exceptions
+    yield
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_transpor
+ts\default.py", line 250, 
+in handle_request
+    resp = self._pool.hand
+le_request(req)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_sync\
+connection_pool.py", line 
+256, in handle_request
+    raise exc from None
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_sync\
+connection_pool.py", line 
+236, in handle_request
+    response = 
+connection.handle_request(
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_sync\
+connection.py", line 103, 
+in handle_request
+    return self._connectio
+n.handle_request(request)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_sync\
+http11.py", line 136, in 
+handle_request
+    raise exc
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_sync\
+http11.py", line 106, in 
+handle_request
+    ) = self._receive_resp
+onse_headers(**kwargs)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_sync\
+http11.py", line 177, in 
+_receive_response_headers
+    event = self._receive_
+event(timeout=timeout)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_sync\
+http11.py", line 217, in 
+_receive_event
+    data = 
+self._network_stream.read(
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_backe
+nds\sync.py", line 126, 
+in read
+    with 
+map_exceptions(exc_map):
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\con
+textlib.py", line 153, in 
+__exit__
+    self.gen.throw(typ, 
+value, traceback)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpcore\_excep
+tions.py", line 14, in 
+map_exceptions
+    raise to_exc(exc) 
+from exc
+httpcore.ReadTimeout: 
+timed out
+
+The above exception was 
+the direct cause of the 
+following exception:
+
+Traceback (most recent 
+call last):
+  File "<string>", line 
+1, in <module>
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_api.py",
+ line 195, in get
+    return request(
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_api.py",
+ line 109, in request
+    return client.request(
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_client.p
+y", line 825, in request
+    return 
+self.send(request, 
+auth=auth, follow_redirect
+s=follow_redirects)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_client.p
+y", line 914, in send
+    response = 
+self._send_handling_auth(
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_client.p
+y", line 942, in 
+_send_handling_auth
+    response = self._send_
+handling_redirects(
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_client.p
+y", line 979, in 
+_send_handling_redirects
+    response = self._send_
+single_request(request)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_client.p
+y", line 1014, in 
+_send_single_request
+    response = transport.h
+andle_request(request)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_transpor
+ts\default.py", line 249, 
+in handle_request
+    with 
+map_httpcore_exceptions():
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\con
+textlib.py", line 153, in 
+__exit__
+    self.gen.throw(typ, 
+value, traceback)
+  File "C:\Users\Vasanth S
+.J.R\AppData\Local\Program
+s\Python\Python310\lib\sit
+e-packages\httpx\_transpor
+ts\default.py", line 118, 
+in map_httpcore_exceptions
+    raise 
+mapped_exc(message) from 
+exc
+httpx.ReadTimeout: timed 
+out

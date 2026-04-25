@@ -1,0 +1,68 @@
+{
+  "name": "codepulse_daily_digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 * * *" }]
+        }
+      },
+      "name": "Daily 9AM Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/analysis/risks?repo_id=1",
+        "method": "GET",
+        "options": {}
+      },
+      "name": "Get Knowledge Risks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const risks = items[0].json;\nconst highRisks = (Array.isArray(risks) ? risks : []).filter(r => r.risk_level === 'HIGH');\nif (highRisks.length === 0) {\n  return [];\n}\nreturn highRisks.map(r => ({\n  json: {\n    module: r.module,\n    developer: r.top_developer,\n    pct: r.ownership_pct,\n    risk_level: r.risk_level\n  }\n}));"
+      },
+      "name": "Filter HIGH Risks",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#codepulse-alerts",
+        "text": "⚠️ CodePulse Daily Risk Alert:\n{{ $json.module }} is owned {{ $json.pct }}% by {{ $json.developer }} — knowledge concentration risk.",
+        "options": {}
+      },
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Daily 9AM Trigger": {
+      "main": [
+        [{ "node": "Get Knowledge Risks", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Knowledge Risks": {
+      "main": [
+        [{ "node": "Filter HIGH Risks", "type": "main", "index": 0 }]
+      ]
+    },
+    "Filter HIGH Risks": {
+      "main": [
+        [{ "node": "Send Slack Alert", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

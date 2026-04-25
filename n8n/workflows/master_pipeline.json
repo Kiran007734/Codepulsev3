@@ -1,0 +1,147 @@
+{
+  "name": "CodePulse Master Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "start-analysis",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "id": "webhook-node"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$json.body.owner}}/{{$json.body.repo}}/commits",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "name": "GitHub Fetch Commits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300],
+      "id": "github-node"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/analysis/requirements",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "repo_id",
+              "value": "={{$node[\"Webhook Trigger\"].json.body.repo_id}}"
+            },
+            {
+              "name": "requirements",
+              "value": "={{$node[\"Webhook Trigger\"].json.body.requirements}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "AI Requirement Mapping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 200],
+      "id": "ai-mapping-node"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/analysis/impact",
+        "qs": {
+          "parameters": [
+            {
+              "name": "repo_id",
+              "value": "={{$node[\"Webhook Trigger\"].json.body.repo_id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Developer Impact Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 400],
+      "id": "impact-node"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/analysis/risks",
+        "qs": {
+          "parameters": [
+            {
+              "name": "repo_id",
+              "value": "={{$node[\"Webhook Trigger\"].json.body.repo_id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Knowledge Risk Detection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300],
+      "id": "risk-node"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "GitHub Fetch Commits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Fetch Commits": {
+      "main": [
+        [
+          {
+            "node": "AI Requirement Mapping",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Developer Impact Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Requirement Mapping": {
+      "main": [
+        [
+          {
+            "node": "Knowledge Risk Detection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Developer Impact Engine": {
+      "main": [
+        [
+          {
+            "node": "Knowledge Risk Detection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

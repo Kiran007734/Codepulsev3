@@ -1,0 +1,12 @@
+b15c9b7 Added new UI design
+d3718dd Added new UI design
+0c38ece updated UI and features
+7651dc2 Fix API endpoint routing and memory limits for prod deployment
+aaaae9d Fix memory issue (CPU torch + lazy load)
+f6c0999 Add landing page
+c547531 Added new feature
+434f616 Added new feature
+66031c9 Added new feature: developer skill mapping
+d161eca Resolved README merge conflict
+b77ecab Initial CodePulse project
+2e0725d Initial commit

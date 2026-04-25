@@ -1,0 +1,415 @@
+{
+    "status_code": 200,
+    "json": {
+        "repo_overview": {
+            "repo_name": "arshadahmedjwork-create/cosmo",
+            "total_commits": 21,
+            "active_developers": 4,
+            "modules_tracked": 10,
+            "risky_modules": 5,
+            "commit_activity": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "recent_activity": [
+                {
+                    "sha": "8721101",
+                    "message": "Rename cosmo banner 5.png to favicon.png",
+                    "author": "arshadahmedjwork-create",
+                    "date": "2026-03-15T12:28:22",
+                    "files_changed": 1
+                },
+                {
+                    "sha": "2604e65",
+                    "message": "Add files via upload",
+                    "author": "arshadahmedjwork-create",
+                    "date": "2026-03-15T12:28:01",
+                    "files_changed": 1
+                },
+                {
+                    "sha": "de21d93",
+                    "message": "Delete public/favicon.ico",
+                    "author": "arshadahmedjwork-create",
+                    "date": "2026-03-15T12:27:19",
+                    "files_changed": 1
+                },
+                {
+                    "sha": "52f5e5a",
+                    "message": "Merge pull request #1 from arshadahmedjwork-create/cosmo/upd",
+                    "author": "arshadahmedjwork-create",
+                    "date": "2026-03-09T11:14:43",
+                    "files_changed": 39
+                },
+                {
+                    "sha": "3fbdb2c",
+                    "message": "v1.4",
+                    "author": "arshadahmedjwork-create",
+                    "date": "2026-03-09T09:15:49",
+                    "files_changed": 38
+                },
+                {
+                    "sha": "6afc4c8",
+                    "message": "cosmo ui updates - 5/3/26",
+                    "author": "puspharaj-7",
+                    "date": "2026-03-05T12:17:47",
+                    "files_changed": 5
+                },
+                {
+                    "sha": "d4e2228",
+                    "message": "Update README.md",
+                    "author": "arshadahmedjwork-create",
+                    "date": "2026-03-05T05:36:15",
+                    "files_changed": 1
+                },
+                {
+                    "sha": "9e770fd",
+                    "message": "first commit",
+                    "author": "arshadahmedjwork-create",
+                    "date": "2026-03-05T05:35:48",
+                    "files_changed": 1
+                },
+                {
+                    "sha": "173436b",
+                    "message": "v0.1",
+                    "author": "arshadahmedjwork-create",
+                    "date": "2026-03-02T12:01:35",
+                    "files_changed": 92
+                },
+                {
+                    "sha": "17cd24f",
+                    "message": "Replicated Palmer style for granite",
+                    "author": "lovable-dev[bot]",
+                    "date": "2026-02-28T10:48:04",
+                    "files_changed": 14
+                }
+            ]
+        },
+        "developer_impact": [
+            {
+                "name": "Lovable",
+                "avatar_initials": "L",
+                "commits": 1,
+                "files_changed": 80,
+                "impact_score": 10.0,
+                "risk_label": "HIGH IMPACT",
+                "modules": [
+                    "public",
+                    "root",
+                    "components",
+                    "src",
+                    "pages",
+                    "test",
+                    "hooks",
+                    "lib"
+                ],
+                "trend_data": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "color": "#F59E0B"
+            },
+            {
+                "name": "lovable-dev[bot]",
+                "avatar_initials": "L",
+                "commits": 11,
+                "files_changed": 75,
+                "impact_score": 5.7,
+                "risk_label": "MEDIUM",
+                "modules": [
+                    "root",
+                    "components",
+                    "src",
+                    "pages",
+                    "assets"
+                ],
+                "trend_data": [
+                    11,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "color": "#10B981"
+            },
+            {
+                "name": "arshadahmedjwork-create",
+                "avatar_initials": "A",
+                "commits": 8,
+                "files_changed": 174,
+                "impact_score": 5.0,
+                "risk_label": "MEDIUM",
+                "modules": [
+                    "public",
+                    "root",
+                    "data",
+                    "components",
+                    "src",
+                    "pages",
+                    "assets"
+                ],
+                "trend_data": [
+                    1,
+                    4,
+                    3,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "color": "#3B82F6"
+            },
+            {
+                "name": "puspharaj-7",
+                "avatar_initials": "P",
+                "commits": 1,
+                "files_changed": 5,
+                "impact_score": 1.1,
+                "risk_label": "LOW",
+                "modules": [
+                    "pages",
+                    "components",
+                    "src",
+                    "root"
+                ],
+                "trend_data": [
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "color": "#8B5CF6"
+            }
+        ],
+        "requirement_mapping": [],
+        "knowledge_risks": [
+            {
+                "module": "data",
+                "total_commits": 2,
+                "top_developer": "arshadahmedjwork-create",
+                "ownership_pct": 100.0,
+                "risk_level": "HIGH",
+                "all_developers": [
+                    {
+                        "name": "arshadahmedjwork-create",
+                        "pct": 100.0
+                    }
+                ]
+            },
+            {
+                "module": "hooks",
+                "total_commits": 2,
+                "top_developer": "Lovable",
+                "ownership_pct": 100.0,
+                "risk_level": "HIGH",
+                "all_developers": [
+                    {
+                        "name": "Lovable",
+                        "pct": 100.0
+                    }
+                ]
+            },
+            {
+                "module": "lib",
+                "total_commits": 1,
+                "top_developer": "Lovable",
+                "ownership_pct": 100.0,
+                "risk_level": "HIGH",
+                "all_developers": [
+                    {
+                        "name": "Lovable",
+                        "pct": 100.0
+                    }
+                ]
+            },
+            {
+                "module": "test",
+                "total_commits": 2,
+                "top_developer": "Lovable",
+                "ownership_pct": 100.0,
+                "risk_level": "HIGH",
+                "all_developers": [
+                    {
+                        "name": "Lovable",
+                        "pct": 100.0
+                    }
+                ]
+            },
+            {
+                "module": "assets",
+                "total_commits": 154,
+                "top_developer": "arshadahmedjwork-create",
+                "ownership_pct": 89.6,
+                "risk_level": "HIGH",
+                "all_developers": [
+                    {
+                        "name": "arshadahmedjwork-create",
+                        "pct": 89.6
+                    },
+                    {
+                        "name": "lovable-dev[bot]",
+                        "pct": 10.4
+                    }
+                ]
+            },
+            {
+                "module": "components",
+                "total_commits": 99,
+                "top_developer": "Lovable",
+                "ownership_pct": 50.5,
+                "risk_level": "MEDIUM",
+                "all_developers": [
+                    {
+                        "name": "Lovable",
+                        "pct": 50.5
+                    },
+                    {
+                        "name": "lovable-dev[bot]",
+                        "pct": 32.3
+                    },
+                    {
+                        "name": "arshadahmedjwork-create",
+                        "pct": 15.2
+                    },
+                    {
+                        "name": "puspharaj-7",
+                        "pct": 2.0
+                    }
+                ]
+            },
+            {
+                "module": "public",
+                "total_commits": 6,
+                "top_developer": "arshadahmedjwork-create",
+                "ownership_pct": 50.0,
+                "risk_level": "MEDIUM",
+                "all_developers": [
+                    {
+                        "name": "arshadahmedjwork-create",
+                        "pct": 50.0
+                    },
+                    {
+                        "name": "Lovable",
+                        "pct": 50.0
+                    }
+                ]
+            },
+            {
+                "module": "pages",
+                "total_commits": 16,
+                "top_developer": "lovable-dev[bot]",
+                "ownership_pct": 50.0,
+                "risk_level": "MEDIUM",
+                "all_developers": [
+                    {
+                        "name": "lovable-dev[bot]",
+                        "pct": 50.0
+                    },
+                    {
+                        "name": "arshadahmedjwork-create",
+                        "pct": 31.2
+                    },
+                    {
+                        "name": "Lovable",
+                        "pct": 12.5
+                    },
+                    {
+                        "name": "puspharaj-7",
+                        "pct": 6.2
+                    }
+                ]
+            },
+            {
+                "module": "src",
+                "total_commits": 12,
+                "top_developer": "lovable-dev[bot]",
+                "ownership_pct": 41.7,
+                "risk_level": "LOW",
+                "all_developers": [
+                    {
+                        "name": "lovable-dev[bot]",
+                        "pct": 41.7
+                    },
+                    {
+                        "name": "Lovable",
+                        "pct": 41.7
+                    },
+                    {
+                        "name": "arshadahmedjwork-create",
+                        "pct": 8.3
+                    },
+                    {
+                        "name": "puspharaj-7",
+                        "pct": 8.3
+                    }
+                ]
+            },
+            {
+                "module": "root",
+                "total_commits": 40,
+                "top_developer": "Lovable",
+                "ownership_pct": 37.5,
+                "risk_level": "LOW",
+                "all_developers": [
+                    {
+                        "name": "Lovable",
+                        "pct": 37.5
+                    },
+                    {
+                        "name": "lovable-dev[bot]",
+                        "pct": 35.0
+                    },
+                    {
+                        "name": "arshadahmedjwork-create",
+                        "pct": 25.0
+                    },
+                    {
+                        "name": "puspharaj-7",
+                        "pct": 2.5
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,106 @@
+{
+  "name": "codepulse_pr_check",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-pr",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "name": "GitHub PR Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const pr = $json;\nconst title = pr.pull_request?.title || '';\nconst body = pr.pull_request?.body || '';\nconst requirementText = `${title} ${body}`.trim();\nconst prNumber = pr.pull_request?.number || 0;\nconst repoFullName = pr.repository?.full_name || '';\nreturn [{ json: { requirementText, prNumber, repoFullName, repo_id: 1 } }];"
+      },
+      "name": "Extract PR Info",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/analysis/requirements",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "requirements",
+              "value": "={{ [$json.requirementText] }}"
+            },
+            {
+              "name": "repo_id",
+              "value": "={{ $json.repo_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Check Requirement Match",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const results = $json;\nconst mapping = Array.isArray(results) ? results[0] : results;\nconst confidence = mapping?.confidence || 0;\nconst requirement = mapping?.requirement || '';\nlet comment = '';\nif (confidence >= 70) {\n  comment = `✅ CodePulse: This PR matches requirement '${requirement}' with ${confidence}% confidence.`;\n} else {\n  comment = `⚠️ CodePulse: No matching business requirement found for this PR.`;\n}\nreturn [{ json: { comment, confidence } }];"
+      },
+      "name": "Build Comment",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/{{ $node['Extract PR Info'].json.repoFullName }}/issues/{{ $node['Extract PR Info'].json.prNumber }}/comments",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ $json.comment }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Post PR Comment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 300],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "GitHub PR Webhook": {
+      "main": [
+        [{ "node": "Extract PR Info", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract PR Info": {
+      "main": [
+        [{ "node": "Check Requirement Match", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Requirement Match": {
+      "main": [
+        [{ "node": "Build Comment", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Comment": {
+      "main": [
+        [{ "node": "Post PR Comment", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
