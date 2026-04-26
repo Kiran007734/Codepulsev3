@@ -79,8 +79,12 @@ async def get_developer_skills(
         raise HTTPException(status_code=404, detail="Repository not found")
 
     developers = _load_developers(db, repo_id)
-    commits = _load_commits(db, repo_id)
-    return compute_developer_skills(developers, commits)
+    commits = _load_commits(db, repo_url=repo.repo_url) if False else _load_commits(db, repo_id) # keep existing load, pass url
+    
+    import os
+    token = os.getenv("GITHUB_TOKEN", "")
+    
+    return await compute_developer_skills(developers, commits, repo.repo_url, token)
 
 
 # ── Feature 3: Sprint Summary ──

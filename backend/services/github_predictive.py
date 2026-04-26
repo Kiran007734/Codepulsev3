@@ -11,6 +11,8 @@ import httpx
 from datetime import datetime
 from cachetools import TTLCache
 
+from services.repository_provider import get_provider
+
 # 300-second TTL cache (max 256 entries)
 _cache = TTLCache(maxsize=256, ttl=300)
 
@@ -22,9 +24,11 @@ def _get_db_config():
     try:
         repo = db.query(Repository).first()
         if repo:
+            repo_url = repo.repo_url or f"https://github.com/{repo.owner}/{repo.name}"
             return {
                 "owner": repo.owner or "",
                 "repo": repo.name or "",
+                "repo_url": repo_url,
                 "token": os.getenv("GITHUB_TOKEN", "")
             }
     except Exception:
@@ -32,9 +36,12 @@ def _get_db_config():
     finally:
         db.close()
         
+    owner = os.getenv("GITHUB_OWNER", "")
+    repo_name = os.getenv("GITHUB_REPO", "")
     return {
-        "owner": os.getenv("GITHUB_OWNER", ""),
-        "repo": os.getenv("GITHUB_REPO", ""),
+        "owner": owner,
+        "repo": repo_name,
+        "repo_url": f"https://github.com/{owner}/{repo_name}",
         "token": os.getenv("GITHUB_TOKEN", "")
     }
 
@@ -84,125 +91,66 @@ async def _get_with_202_retry(client: httpx.AsyncClient, url: str, cfg: dict, pa
 
 async def fetch_commits(since: str = None, until: str = None) -> list[dict]:
     """
-    Fetch commits with optional date range, including per-commit file details.
-
-    Args:
-        since: ISO date string (e.g. "2024-01-01T00:00:00Z")
-        until: ISO date string
-
-    Returns: list of commit dicts with sha, author_login, author_date, message, files
+    Fetch commits with optional date range using Provider.
     """
     cache_key = f"commits:{since}:{until}"
     if cache_key in _cache:
         return _cache[cache_key]
 
     cfg = _get_db_config()
-    base = _base_url(cfg)
-    params = {"per_page": 100}
-    if since:
-        params["since"] = since
-    if until:
-        params["until"] = until
-
+    provider = get_provider(cfg["repo_url"], cfg["token"])
+    
+    raw_commits = await provider.getCommits()
     commits = []
-    async with httpx.AsyncClient(timeout=60.0, verify=False) as client:
-        # Paginate through all commits
-        page = 1
-        while True:
-            params["page"] = page
-            resp = await client.get(f"{base}/commits", headers=_headers(cfg), params=params)
-            resp.raise_for_status()
-            page_data = resp.json()
-            if not page_data:
-                break
-
-            # Fetch file details for each commit (batched)
-            for raw in page_data:
-                sha = raw.get("sha", "")
-                detail_resp = await _get_with_202_retry(client, f"{base}/commits/{sha}", cfg)
-                detail = detail_resp.json() if detail_resp.status_code == 200 else {}
-
-                files = []
-                for f in detail.get("files", []):
-                    files.append({
-                        "filename": f.get("filename", ""),
-                        "additions": f.get("additions", 0),
-                        "deletions": f.get("deletions", 0),
-                        "changes": f.get("changes", 0),
-                    })
-
-                github_author = raw.get("author") or {}
-                git_info = raw.get("commit", {}).get("author", {})
-
-                commits.append({
-                    "sha": sha,
-                    "author_login": github_author.get("login", git_info.get("name", "unknown")),
-                    "author_date": git_info.get("date", ""),
-                    "message": raw.get("commit", {}).get("message", "").split("\n")[0],
-                    "files": files,
-                })
-
-            if len(page_data) < 100:
-                break
-            page += 1
+    for c in raw_commits:
+        commits.append({
+            "sha": c.get("sha", ""),
+            "author_login": c.get("author_name", "unknown"),
+            "author_date": c.get("timestamp", ""),
+            "message": c.get("message", ""),
+            "files": c.get("files", []),
+        })
 
     _cache[cache_key] = commits
     return commits
 
 
 async def fetch_pull_requests(state: str = "all") -> list[dict]:
-    """Fetch pull requests with basic metadata."""
+    """Fetch pull requests with basic metadata using Provider."""
     cache_key = f"prs:{state}"
     if cache_key in _cache:
         return _cache[cache_key]
 
     cfg = _get_db_config()
-    base = _base_url(cfg)
-    async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
-        resp = await client.get(
-            f"{base}/pulls",
-            headers=_headers(cfg),
-            params={"state": state, "per_page": 50},
-        )
-        resp.raise_for_status()
-        raw = resp.json()
-
-    prs = [
-        {
-            "number": pr.get("number"),
+    provider = get_provider(cfg["repo_url"], cfg["token"])
+    
+    raw_prs = await provider.getPullRequests()
+    
+    prs = []
+    for pr in raw_prs:
+        prs.append({
+            "number": pr.get("number", 0),
             "title": pr.get("title"),
-            "user_login": (pr.get("user") or {}).get("login"),
+            "user_login": pr.get("user_login"),
             "state": pr.get("state"),
             "created_at": pr.get("created_at"),
             "merged_at": pr.get("merged_at"),
-        }
-        for pr in raw
-    ]
+        })
+
     _cache[cache_key] = prs
     return prs
 
 
 async def fetch_contributors() -> list[dict]:
-    """Fetch repository contributor list."""
+    """Fetch repository contributor list using Provider."""
     cache_key = "contributors"
     if cache_key in _cache:
         return _cache[cache_key]
 
     cfg = _get_db_config()
-    base = _base_url(cfg)
-    async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
-        resp = await client.get(f"{base}/contributors", headers=_headers(cfg))
-        resp.raise_for_status()
-        raw = resp.json()
-
-    contributors = [
-        {
-            "login": c.get("login"),
-            "contributions": c.get("contributions", 0),
-            "avatar_url": c.get("avatar_url", ""),
-        }
-        for c in raw
-    ]
+    provider = get_provider(cfg["repo_url"], cfg["token"])
+    contributors = await provider.getContributors()
+    
     _cache[cache_key] = contributors
     return contributors
 

@@ -66,7 +66,14 @@ export default function SkillIntelligence() {
       </div>
 
       {/* Developer Skill Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {developers.length === 0 ? (
+        <div className={`glass-card p-12 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+          <p className="text-4xl mb-4">📭</p>
+          <p className="text-lg font-medium t-primary mb-2">No data</p>
+          <p className="text-sm">No commits found to analyze skills.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {developers.map((dev, i) => {
           const initials = dev.name
             ? dev.name.split(/[\s_-]/).map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -94,7 +101,10 @@ export default function SkillIntelligence() {
 
               {/* Skill bars */}
               <div className="space-y-3">
-                {(dev.skills || []).slice(0, 6).map((skill, j) => (
+                {(!dev.skills || dev.skills.length === 0) ? (
+                  <p className="text-xs t-faint italic text-center py-4">No skills detected</p>
+                ) : (
+                  (dev.skills).slice(0, 6).map((skill, j) => (
                   <div key={skill.skill}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs t-secondary font-medium">{skill.skill}</span>
@@ -110,7 +120,8 @@ export default function SkillIntelligence() {
                       ></div>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Show more if truncated */}
@@ -123,6 +134,7 @@ export default function SkillIntelligence() {
           );
         })}
       </div>
+      )}
 
       {/* Info card */}
       <div className={`glass-card p-5 opacity-0 animate-slide-up stagger-8 ${

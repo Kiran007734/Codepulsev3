@@ -83,7 +83,6 @@ export default function DeveloperDashboard() {
   const [sending,     setSending]     = useState(false);
   const [sendMsg,     setSendMsg]     = useState('');
   const [sendErr,     setSendErr]     = useState('');
-  const [downloading, setDownloading] = useState(false);
 
   const githubUsername = devUser?.githubUsername;
 
@@ -201,71 +200,7 @@ export default function DeveloperDashboard() {
     finally { setSending(false); }
   }, [emailAvailable, buildPayload, githubEmail]);
 
-  const handleDownload = useCallback(async () => {
-    if (!githubUsername) return;
-    setDownloading(true); setSendErr(''); setSendMsg('');
-    try {
-      // Primary: server-side fetch + PDF generation (no payload needed)
-      let r;
-      try {
-        r = await fetch(`${API}/api/developer/${encodeURIComponent(githubUsername)}/report`);
-      } catch (networkErr) {
-        console.warn('[Download] GET failed (network):', networkErr.message);
-        r = null;
-      }
 
-      // Fallback: POST with client data if GET fails or is not reachable
-      if (!r || !r.ok) {
-        const payload = buildPayload();
-        if (payload) {
-          r = await fetch(`${API}/api/dev-report/download`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-        }
-      }
-
-      // Check response
-      if (!r || !r.ok) {
-        let detail = 'Download failed. Please try again.';
-        if (r) {
-          try {
-            const errBody = await r.text();
-            try {
-              const errJson = JSON.parse(errBody);
-              detail = errJson.detail || detail;
-            } catch { detail = errBody || detail; }
-          } catch {}
-        }
-        throw new Error(detail);
-      }
-
-      // Validate we got a PDF
-      const ct = r.headers.get('content-type') || '';
-      if (!ct.includes('application/pdf')) {
-        throw new Error('Server returned an unexpected response (not a PDF).');
-      }
-
-      const blob = await r.blob();
-      if (blob.size < 100) throw new Error('Generated PDF appears to be empty.');
-
-      const url = URL.createObjectURL(blob);
-      const a   = document.createElement('a');
-      a.href     = url;
-      a.download = `CodePulse_Dev_${githubUsername}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      // Delay revoke so the browser has time to start the download
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } catch (e) {
-      console.error('[Download]', e);
-      setSendErr(e.message || 'Download failed');
-    } finally {
-      setDownloading(false);
-    }
-  }, [buildPayload, githubUsername]);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-[#0b0f19]' : 'bg-gradient-to-br from-gray-50 to-emerald-50/30'}`}>
@@ -336,12 +271,6 @@ export default function DeveloperDashboard() {
                       : 'opacity-50 cursor-not-allowed bg-slate-600 text-slate-300'
                   }`}>
                   {sending ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sending…</> : '📧 Send Report'}
-                </button>
-                <button onClick={handleDownload} disabled={downloading}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 border transition-all ${
-                    isDark ? 'border-white/10 text-slate-300 hover:bg-white/5' : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-                  } ${downloading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                  {downloading ? <><span className="w-4 h-4 border-2 border-slate-400/30 border-t-slate-400 rounded-full animate-spin" />Downloading…</> : '⬇️ Download PDF'}
                 </button>
               </div>
             </div>

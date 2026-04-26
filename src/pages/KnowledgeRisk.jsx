@@ -50,6 +50,12 @@ export default function KnowledgeRisk() {
 
     getKnowledgeRisks(parseInt(repoId))
       .then(data => {
+        if (!data || data.length === 0) {
+          setError('No knowledge risk data found. Ensure the repository has commits with files.');
+          setLoading(false);
+          return;
+        }
+
         // Map API response and assign colors
         const devColorMap = {};
         let colorIdx = 0;

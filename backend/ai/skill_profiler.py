@@ -4,25 +4,33 @@
 # ── Skill mapping rules ──
 # Maps file extensions and directory patterns to skill labels.
 
+import asyncio
+from cachetools import TTLCache
+from services.repository_provider import get_provider
+
+# Cache commit files by SHA to avoid repeated API calls (keeps up to 1000 shas)
+_commit_files_cache = TTLCache(maxsize=1000, ttl=3600)
+
 EXTENSION_MAP = {
-    ".py": "Python",
     ".js": "JavaScript",
-    ".jsx": "React",
     ".ts": "TypeScript",
-    ".tsx": "React/TypeScript",
+    ".py": "Python",
+    ".java": "Java",
+    ".cpp": "C++",
     ".html": "HTML",
     ".css": "CSS",
-    ".scss": "CSS/SCSS",
-    ".sql": "SQL/Database",
-    ".java": "Java",
-    ".kt": "Kotlin",
     ".go": "Go",
     ".rs": "Rust",
+    # Additional robust mappings
+    ".jsx": "React",
+    ".tsx": "React/TypeScript",
+    ".scss": "CSS/SCSS",
+    ".sql": "SQL/Database",
+    ".kt": "Kotlin",
     ".rb": "Ruby",
     ".php": "PHP",
     ".swift": "Swift",
     ".c": "C",
-    ".cpp": "C++",
     ".h": "C/C++ Headers",
     ".cs": "C#",
     ".sh": "Shell/DevOps",
@@ -33,12 +41,8 @@ EXTENSION_MAP = {
     ".xml": "Config/Data",
     ".toml": "Config/Data",
     ".md": "Documentation",
-    ".rst": "Documentation",
-    ".txt": "Documentation",
     ".dockerfile": "Docker/DevOps",
     ".tf": "Terraform/IaC",
-    ".proto": "gRPC/Protobuf",
-    ".graphql": "GraphQL",
     ".vue": "Vue.js",
     ".svelte": "Svelte",
 }
@@ -114,26 +118,67 @@ def _classify_file(filepath: str) -> list[str]:
     return list(skills) if skills else ["General"]
 
 
-def compute_developer_skills(
+async def compute_developer_skills(
     developers: list[dict],
     commits: list[dict],
+    repo_url: str = "",
+    token: str = ""
 ) -> list[dict]:
     """
     Compute skill breakdown for each developer based on their commits.
+    Fetches detailed commit files via API if missing (limiting to last 100 commits).
 
     Returns: [{ name, skills: [{ skill, percentage, file_count }] }]
     """
+    if not commits:
+        return []
+
+    # Limit to last 100 commits for performance optimization
+    commits = commits[:100]
+    
+    # Initialize Provider for detailed file fetching
+    provider = None
+    if repo_url:
+        try:
+            provider = get_provider(repo_url, token)
+        except Exception:
+            pass
+
+    # Batch fetch missing file information
+    async def get_files_for_commit(c):
+        sha = c.get("sha")
+        # If DB already has rich files, use them
+        db_files = c.get("files", [])
+        if db_files and len(db_files) > 0 and isinstance(db_files[0], dict) and db_files[0].get("filename"):
+            return [f.get("filename") for f in db_files if isinstance(f, dict)]
+        if db_files and len(db_files) > 0 and isinstance(db_files[0], str):
+            return db_files
+
+        # Fetch from Cache or API
+        if sha in _commit_files_cache:
+            return _commit_files_cache[sha]
+        
+        if provider and sha:
+            try:
+                files = await provider.getCommitFiles(sha)
+                _commit_files_cache[sha] = files
+                return files
+            except Exception:
+                pass
+        return []
+
+    # Fetch files in parallel
+    commit_files_results = await asyncio.gather(*[get_files_for_commit(c) for c in commits])
+
     # Build per-developer skill counts
     dev_skills: dict[str, dict[str, int]] = {}
 
-    for commit in commits:
+    for commit, fetched_files in zip(commits, commit_files_results):
         author = commit.get("author", "Unknown")
         if author not in dev_skills:
             dev_skills[author] = {}
 
-        files = commit.get("files", [])
-        for f in files:
-            filepath = f.get("filename", "") if isinstance(f, dict) else str(f)
+        for filepath in fetched_files:
             if not filepath:
                 continue
             tags = _classify_file(filepath)
@@ -149,6 +194,13 @@ def compute_developer_skills(
     # Normalize to percentages
     result = []
     for dev_name, skills in dev_skills.items():
+        if not skills:
+            result.append({
+                "name": dev_name,
+                "skills": [],
+            })
+            continue
+            
         total = sum(skills.values()) or 1
         skill_list = sorted(
             [
