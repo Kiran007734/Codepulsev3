@@ -68,6 +68,12 @@ export default function PlanVsReality() {
         <p className="text-sm t-muted mt-1">Jira issues matched against GitHub commits</p>
       </div>
 
+      {hasData && data.message && data.message !== "Plan vs reality mapping successful." && (
+        <div className={`p-4 rounded-xl text-sm border opacity-0 animate-slide-up ${isDark ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' : 'bg-yellow-50 border-yellow-200 text-yellow-700'}`}>
+          💡 {data.message}
+        </div>
+      )}
+
       {!hasData ? (
         <div className={`glass-card p-8 text-center animate-fade-in ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
           <p className="text-4xl mb-4">🔗</p>

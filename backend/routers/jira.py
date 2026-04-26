@@ -72,6 +72,13 @@ async def connect_jira(request: JiraConnectRequest, db: Session = Depends(get_db
         partial = sum(1 for m in matched if m["completionStatus"] == "partial")
         not_started = sum(1 for m in matched if m["completionStatus"] == "not started")
 
+        direct_matches = sum(1 for iss in matched for c in iss.get("matchedCommits", []) if c.get("match_type") == "exact")
+        ai_matches = sum(1 for iss in matched for c in iss.get("matchedCommits", []) if c.get("match_type") == "ai_based")
+        
+        msg = "Plan vs reality mapping successful."
+        if not direct_matches and ai_matches:
+            msg = "No direct matches — showing inferred matches"
+
         result = {
             "success": True,
             "totalTasks": len(matched),
@@ -79,6 +86,7 @@ async def connect_jira(request: JiraConnectRequest, db: Session = Depends(get_db
             "partial": partial,
             "notStarted": not_started,
             "issues": matched,
+            "message": msg
         }
 
         # 5. Cache results

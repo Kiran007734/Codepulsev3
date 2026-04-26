@@ -53,8 +53,9 @@ class GitHubProvider(RepositoryProvider):
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
         }
-        if self.token and self.token != "your_personal_access_token":
-            h["Authorization"] = f"Bearer {self.token}"
+        token = self.token or os.getenv("GITHUB_TOKEN")
+        if token and token != "your_personal_access_token":
+            h["Authorization"] = f"Bearer {token}"
         return h
 
     async def getCommits(self) -> list[dict]:

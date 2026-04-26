@@ -12,8 +12,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
-const GH  = 'https://api.github.com';
-const API = '';  // Uses Vite proxy (vite.config.js proxies /api → localhost:8000)
+const API = import.meta.env.PROD
+  ? `${import.meta.env.VITE_API_BASE_URL || ''}/api`
+  : '/api';
 
 function parseRepoPath(url) {
   try {
@@ -28,9 +29,9 @@ function parseRepoPath(url) {
 
 /** Fetch a single user's public profile (includes email if public) */
 async function fetchGithubProfile(username, token) {
-  const headers = { Accept: 'application/vnd.github+json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const r = await fetch(`${GH}/users/${username}`, { headers });
+  const url = `${API}/github/proxy/users/${username}`;
+  const r = await fetch(url);
+  if (r.status === 403) throw new Error("GitHub access denied or rate limit exceeded");
   if (!r.ok) throw new Error(`GitHub ${r.status}`);
   return r.json();
 }
@@ -45,7 +46,7 @@ function computeImpact(profile, contributions) {
 }
 
 /** Per-developer row with lazy email fetch + Send Report */
-function DevRow({ dev, isDark, repoToken, navigate, cardCls, onSuccess, onError }) {
+function DevRow({ dev, isDark, repoToken, repoPath, navigate, cardCls, onSuccess, onError }) {
   const [profile,    setProfile]   = useState(null);
   const [emailState, setEmailState] = useState('idle'); // idle | loading | found | missing | error
   const [expanded,   setExpanded]  = useState(false);
@@ -63,12 +64,36 @@ function DevRow({ dev, isDark, repoToken, navigate, cardCls, onSuccess, onError 
     setEmailState('loading');
     try {
       const prof = await fetchGithubProfile(githubHandle, repoToken);
+      let email = prof.email;
+      
+      // Fallback: If no public email, search recent commits
+      if (!email && repoPath) {
+        try {
+          const commitsUrl = `${API}/github/proxy/repos/${repoPath}/commits?author=${githubHandle}&per_page=50`;
+          const commitsResp = await fetch(commitsUrl);
+          if (commitsResp.ok) {
+            const commits = await commitsResp.json();
+            for (const c of commits) {
+              const authorEmail = c.commit?.author?.email;
+              // Ignore bot emails and noreply
+              if (authorEmail && !authorEmail.includes('noreply.github.com') && !authorEmail.includes('[bot]') && authorEmail.includes('@')) {
+                email = authorEmail;
+                prof.email = email; // Attach to profile so it renders correctly
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          // Silently ignore fallback failure
+        }
+      }
+      
       setProfile(prof);
-      setEmailState(prof.email ? 'found' : 'missing');
+      setEmailState(email ? 'found' : 'missing');
     } catch {
       setEmailState('error');
     }
-  }, [githubHandle, repoToken]);
+  }, [githubHandle, repoToken, repoPath]);
 
   const handleExpand = () => {
     const next = !expanded;
@@ -275,9 +300,9 @@ export default function DevManagement() {
     if (!repoPath) { setError('No GitHub repository connected. Please complete setup first.'); return; }
     setGenerating(true); setError(''); setSuccess('');
     try {
-      const headers = { Accept: 'application/vnd.github+json' };
-      if (repoToken) headers['Authorization'] = `Bearer ${repoToken}`;
-      const r = await fetch(`${GH}/repos/${repoPath}/contributors?per_page=100&anon=false`, { headers });
+      const url = `${API}/github/proxy/repos/${repoPath}/contributors?per_page=100&anon=false`;
+      const r = await fetch(url);
+      if (r.status === 403) throw new Error("GitHub access denied or rate limit exceeded");
       if (r.status === 404) throw new Error(`Repository "${repoPath}" not found or is private (add a GitHub token in setup).`);
       if (!r.ok) throw new Error(`GitHub API error: ${r.status} ${r.statusText}`);
       const contributors = await r.json();
@@ -425,6 +450,7 @@ export default function DevManagement() {
                     dev={dev}
                     isDark={isDark}
                     repoToken={repoToken}
+                    repoPath={repoPath}
                     navigate={navigate}
                     cardCls={cardCls}
                     onSuccess={setSuccess}

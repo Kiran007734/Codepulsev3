@@ -10,12 +10,34 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 
-const GH   = 'https://api.github.com';
-const API  = '';  // Uses Vite proxy (vite.config.js proxies /api → localhost:8000)
+const API = import.meta.env.PROD
+  ? `${import.meta.env.VITE_API_BASE_URL || ''}/api`
+  : '/api';
 
-const gh = async (p) => {
-  const r = await fetch(`${GH}${p}`, { headers: { Accept: 'application/vnd.github+json' } });
-  if (!r.ok) throw new Error(r.status);
+const gh = async (path) => {
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  const url = `${API}/github/proxy/${cleanPath}`;
+  
+  let r;
+  try {
+    r = await fetch(url);
+  } catch (err) {
+    throw new Error('Network error or proxy unreachable');
+  }
+
+  if (r.status === 403) {
+    throw new Error("GitHub access denied or rate limit exceeded");
+  }
+
+  if (!r.ok) {
+    let detail = `GitHub ${r.status}: ${path}`;
+    try {
+      const errData = await r.json();
+      if (errData.detail) detail = errData.detail;
+    } catch (e) {}
+    throw new Error(detail);
+  }
+
   return r.json();
 };
 
@@ -225,6 +247,16 @@ export default function DeveloperView() {
       </button>
 
       {/* ── Profile + Report Actions ── */}
+      {!profile && !loading ? (
+        <div className="glass-card p-12 text-center mt-4">
+          <p className="text-4xl mb-4">📭</p>
+          <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>No data available</h3>
+          <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+            We couldn't load GitHub data for this developer.
+          </p>
+        </div>
+      ) : (
+        <>
       <div className={`${card} flex flex-col sm:flex-row items-start gap-5`}>
         <div className="flex items-start gap-4 flex-1 min-w-0">
           {profile?.avatar_url
@@ -400,6 +432,8 @@ export default function DeveloperView() {
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
